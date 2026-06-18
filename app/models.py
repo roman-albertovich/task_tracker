@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from enum import Enum
 import uuid
+from typing import Optional
+
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import Column, String, DateTime, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
@@ -37,13 +39,10 @@ class TaskCreate(BaseModel):
 
 class TaskUpdate(BaseModel):
     """Схема для обновления задачи (то, что присылает клиент)"""
-    id: uuid.UUID
-    name: str = Field(..., min_length=1, max_length=100, description="Название задачи")
-    status: TaskStatus
-    description: str | None = Field(None, max_length=540, description="Описание задачи")
-    author: str = Field(..., min_length=1, max_length=100, description="Автор задачи")
-    date_created: datetime
-    date_updated: datetime
+    name: Optional [str] = Field(None, min_length=1, max_length=100, description="Название задачи")
+    description: Optional [str] | None = Field(None, max_length=540, description="Описание задачи")
+    author: Optional [str] = Field(None, min_length=1, max_length=100, description="Автор задачи")
+    status: Optional[TaskStatus] = None
 
 class TaskResponse(BaseModel):
     """Схема ответа API (то, что возвращается клиенту)"""

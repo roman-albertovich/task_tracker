@@ -1,3 +1,4 @@
+from datetime import date, datetime, timezone
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -39,6 +40,21 @@ def get_task_by_id(task_id: uuid.UUID, db: Session = Depends(get_db)):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
+
+@app.patch("/tasks/{task_id}", response_model=TaskResponse)
+def patch_task_by_id(task_id: uuid.UUID, task_data: TaskUpdate, db: Session = Depends(get_db)):
+    """Обновление задачи по id"""
+    db_task = db.query(TaskDB).filter(TaskDB.id == task_id).one_or_none()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task_update = task_data.model_dump(exclude_unset=True)
+
+    for key, value in task_update.items():
+        setattr(db_task, key, value)
+
+    db.commit()
+    db.refresh(db_task)
+    return db_task
 
 @app.get("/")
 def dom_root():
