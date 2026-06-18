@@ -16,7 +16,7 @@ class TaskStatus(str, Enum):
     NEW= "NEW"
     IN_PROGRESS = "IN_PROGRESS"
     DONE = "DONE"
-    CANCELED = "CANCELED"
+    CANCELLED = "CANCELLED"
 
 # 2. Мрдель SQLAlchemy (описание табицы в PosgreSQL)
 class TaskDB(Base):

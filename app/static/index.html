@@ -7,15 +7,19 @@
         body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; }
         button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #218838; }
-        .task-item { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 4px; }
-        .task-status { inline-size: fit-content; padding: 2px 6px; background: #eee; font-size: 12px; font-weight: bold; }
+        .btn-edit { background-color: #007bff; margin-top: 10px; }
+        .btn-edit:hover { background-color: #0069d9; }
+        .btn-cancel { background-color: #6c757d; margin-left: 10px; }
+        .btn-cancel:hover { background-color: #5a6268; }
+        .task-item { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 4px; position: relative; }
+        .task-status { inline-size: fit-content; padding: 2px 6px; background: #eee; font-size: 12px; font-weight: bold; margin-top: 5px;}
     </style>
 </head>
 <body>
-    <h1>Управление задачами</h1>
+    <h1 id="formTitle">Добавить задачу</h1>
 
     <div class="task-form">
         <div class="form-group">
@@ -26,11 +30,22 @@
             <label for="taskAuthor">Автор:</label>
             <input type="text" id="taskAuthor" placeholder="Имя автора">
         </div>
+        <div class="form-group" id="statusGroup" style="display: none;">
+            <label for="taskStatus">Статус:</label>
+            <select id="taskStatus">
+                <option value="NEW">NEW</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="DONE">DONE</option>
+                <option value="CANCELLED">CANCELLED</option>
+            </select>
+        </div>
         <div class="form-group">
             <label for="taskDesc">Описание:</label>
             <textarea id="taskDesc" rows="3" placeholder="Описание задачи"></textarea>
         </div>
-        <button id="btnCreate" onclick="createTask()">Добавить задачу</button>
+
+        <button id="btnSubmit" onclick="handleSubmit()">Добавить задачу</button>
+        <button id="btnCancel" class="btn-cancel" onclick="resetForm()" style="display: none;">Отмена</button>
     </div>
 
     <h2>Список задач</h2>
@@ -38,8 +53,9 @@
 
     <script>
         const API_URL = '/tasks';
+        let editTaskId = null; // Храним ID задачи, которую редактируем в данный момент
 
-        // Функция получения и отрисовки задач
+        // 1. Получение и отрисовка задач
         async function loadTasks() {
             const res = await fetch(API_URL);
             const tasks = await res.json();
@@ -54,32 +70,85 @@
                     <p>${task.description || 'Нет описания'}</p>
                     <div><strong>Автор:</strong> ${task.author}</div>
                     <div class="task-status">${task.status}</div>
+                    <button class="btn-edit" onclick="startEdit('${task.id}', '${task.name}', '${task.author}', '${task.status}', '${task.description || ''}')">Редактировать</button>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // Функция отправки новой задачи на бэкенд
-        async function createTask() {
+        // 2. Режим редактирования: заполняем форму данными выбранной задачи
+        function startEdit(id, name, author, status, description) {
+            editTaskId = id;
+
+            // Меняем заголовки и видимость элементов формы
+            document.getElementById('formTitle').innerText = 'Редактировать задачу';
+            document.getElementById('btnSubmit').innerText = 'Сохранить изменения';
+            document.getElementById('btnSubmit').style.backgroundColor = '#007bff';
+            document.getElementById('btnCancel').style.display = 'inline-block';
+            document.getElementById('statusGroup').style.display = 'block'; // Показываем выбор статуса
+
+            // Заполняем поля формы текущими значениями
+            document.getElementById('taskName').value = name;
+            document.getElementById('taskAuthor').value = author;
+            document.getElementById('taskStatus').value = status;
+            document.getElementById('taskDesc').value = description;
+
+            // Скроллим наверх к форме
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 3. Единый обработчик отправки формы (кнопка btnSubmit)
+        async function handleSubmit() {
             const name = document.getElementById('taskName').value;
             const author = document.getElementById('taskAuthor').value;
             const description = document.getElementById('taskDesc').value;
 
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, author, description })
-            });
+            if (editTaskId) {
+                // Если editTaskId задан — мы в режиме РЕДАКТИРОВАНИЯ (вызываем PATCH)
+                const status = document.getElementById('taskStatus').value;
 
-            if (res.ok) {
-                // Очищаем форму и обновляем список
-                document.getElementById('taskName').value = '';
-                document.getElementById('taskAuthor').value = '';
-                document.getElementById('taskDesc').value = '';
-                await loadTasks();
+                const res = await fetch(`${API_URL}/${editTaskId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, author, description, status })
+                });
+
+                if (res.ok) {
+                    resetForm();
+                    await loadTasks();
+                } else {
+                    alert('Ошибка при обновлении задачи!');
+                }
             } else {
-                alert('Ошибка валидации данных!');
+                // Если editTaskId равен null — мы в режиме СОЗДАНИЯ (вызываем POST)
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, author, description })
+                });
+
+                if (res.ok) {
+                    resetForm();
+                    await loadTasks();
+                } else {
+                    alert('Ошибка валидации при создании!');
+                }
             }
+        }
+
+        // 4. Сброс формы в исходное состояние (Режим создания)
+        function resetForm() {
+            editTaskId = null;
+            document.getElementById('formTitle').innerText = 'Добавить задачу';
+            document.getElementById('btnSubmit').innerText = 'Добавить задачу';
+            document.getElementById('btnSubmit').style.backgroundColor = '#28a745';
+            document.getElementById('btnCancel').style.display = 'none';
+            document.getElementById('statusGroup').style.display = 'none';
+
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskAuthor').value = '';
+            document.getElementById('taskStatus').value = 'NEW';
+            document.getElementById('taskDesc').value = '';
         }
 
         // Загружаем список при открытии страницы

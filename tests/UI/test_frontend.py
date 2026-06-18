@@ -13,7 +13,7 @@ def test_add_new_task_via_ui(page: Page):
     page.fill("#taskAuthor", "Autotest UI")
 
     #3. Click to add
-    page.click("#btnCreate")
+    page.click("#btnSubmit")
 
     #4. Check result (expect из playwright умеет автоматически ждать появления элемента)
     # Find a h3-title with text our task

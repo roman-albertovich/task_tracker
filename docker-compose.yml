@@ -1,0 +1,38 @@
+services:
+  # Контейнер базы данных
+  db:
+    image: postgres:17-alpine
+    container_name: task_tracker_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwe123
+      POSTGRES_DB: task_tracker_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # автоматически создаём таблицу при перевом старте
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Контейнер приложения
+  web:
+    build: .
+    container_name: task_tracker_web
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # Передаём строку подключения через переменную окружения
+      - DATABASE_URL=postgresql://postgres:qwe123@db:5432/task_tracker_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

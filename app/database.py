@@ -1,9 +1,14 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # URL подключения к локальной PostgreSQL
 # Формат: postgresql://пользователь:пароль@хост:порт/имя_бд
-DATABASE_URL = "postgresql://myuser:mypassword@localhost/mydatabase"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:qwe123@localhost/task_tracker_db"
+)
 
 # Создаём движок SQLAlchemy
 engine = create_engine(DATABASE_URL)
