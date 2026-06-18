@@ -5,7 +5,7 @@ import os
 import uuid
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import TaskDB, TaskCreate, TaskResponse, TaskStatus
+from app.models import TaskDB, TaskCreate, TaskResponse, TaskStatus, TaskUpdate
 
 app = FastAPI(title="Task Manager API")
 
@@ -31,6 +31,14 @@ def get_tasks(db: Session = Depends(get_db)):
     """Получение всех задач из базы данных"""
     tasks = db.query(TaskDB).all()
     return tasks
+
+@app.get("/tasks/{task_id}", response_model=TaskResponse)
+def get_task_by_id(task_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Получение задачи по id"""
+    task = db.query(TaskDB).filter(TaskDB.id == task_id).one_or_none()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
 
 @app.get("/")
 def dom_root():

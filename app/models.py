@@ -35,6 +35,15 @@ class TaskCreate(BaseModel):
     description: str | None = Field(None, max_length=540, description="Описание задачи")
     author: str = Field(..., min_length=1, max_length=100, description="Автор задачи")
 
+class TaskUpdate(BaseModel):
+    """Схема для обновления задачи (то, что присылает клиент)"""
+    id: uuid.UUID
+    name: str = Field(..., min_length=1, max_length=100, description="Название задачи")
+    status: TaskStatus
+    description: str | None = Field(None, max_length=540, description="Описание задачи")
+    author: str = Field(..., min_length=1, max_length=100, description="Автор задачи")
+    date_created: datetime
+    date_updated: datetime
 
 class TaskResponse(BaseModel):
     """Схема ответа API (то, что возвращается клиенту)"""
