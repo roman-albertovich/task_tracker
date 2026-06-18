@@ -62,3 +62,7 @@ def dom_root():
     # Выислеяем абсолютный путь к файле index.html
     current_dir = os.path.dirname(os.path.abspath(__file__))
     return FileResponse(os.path.join(current_dir, "static", "index.html"))
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(task_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Удаление задачи по id"""

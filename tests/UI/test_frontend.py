@@ -13,15 +13,20 @@ def test_add_new_task_via_ui(page: Page):
     page.fill("#taskAuthor", "Autotest UI")
 
     #3. Click to add
-    page.click("#btnSubmit")
+    with page.expect_response("**/tasks") as response_info:
+        page.click("#btnSubmit")
+
+    response = response_info.value
+    assert response.status == 201
+
+    response_data = response.json()
+    task_id = response_data["id"]
 
     #4. Check result (expect из playwright умеет автоматически ждать появления элемента)
-    # Find a h3-title with text our task
-    task_title_locator = page.locator(".task-item h3:has-text('Test from Playwright')").first
+    task_card= page.locator(f'.task-item[data-id="{task_id}"]').first
 
     # Убеждаемся, что элемент стал видимым на странице
-    expect(task_title_locator).to_be_visible(timeout=5000)
+    expect(task_card).to_be_visible(timeout=5000)
 
     # Проверяем, что статус задачи по умоланию отображается как NEW
-    status_locator = page.locator(".task-item:has-text('Test from Playwright') .task-status").first
-    expect(status_locator).to_have_text("NEW")
+    expect(task_card.locator(".task-status")).to_have_text("NEW")
