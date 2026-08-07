@@ -3,6 +3,10 @@ venv/
 .venv/
 env/
 
+# Секреты и переменные окружения
+.env
+*.env
+
 # Кэш Python и Pytest
 __pycache__/
 *.pyc
