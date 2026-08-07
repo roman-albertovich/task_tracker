@@ -1,6 +1,4 @@
-from datetime import date, datetime, timezone
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 import uuid
@@ -64,5 +62,12 @@ def dom_root():
     return FileResponse(os.path.join(current_dir, "static", "index.html"))
 
 @app.delete("/tasks/{task_id}", status_code=204)
-def delete_task(task_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_task_by_id(task_id: uuid.UUID, db: Session = Depends(get_db)):
     """Удаление задачи по id"""
+    db_task = db.query(TaskDB).filter(TaskDB.id == task_id).one_or_none()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    db.delete(db_task)
+    db.commit()
+    return None

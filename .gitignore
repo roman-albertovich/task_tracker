@@ -1,0 +1,18 @@
+# Виртуальное окружение
+venv/
+.venv/
+env/
+
+# Кэш Python и Pytest
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Отчёты Playwright и скриншоты
+playwright-report/
+test-results/
+
+# Файлы IDE и ОС
+.idea/
+.vscode/
+.DS_Store

@@ -18,7 +18,7 @@ class TaskStatus(str, Enum):
     DONE = "DONE"
     CANCELLED = "CANCELLED"
 
-# 2. Мрдель SQLAlchemy (описание табицы в PosgreSQL)
+# 2. Модель SQLAlchemy (описание табицы в PosgreSQL)
 class TaskDB(Base):
     __tablename__ = "tasks"
 
