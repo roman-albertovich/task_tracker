@@ -20,3 +20,7 @@ test-results/
 .idea/
 .vscode/
 .DS_Store
+
+# Allure reports
+allure-results/
+allure-report/
