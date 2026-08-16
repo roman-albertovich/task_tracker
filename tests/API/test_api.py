@@ -1,7 +1,7 @@
 import allure
 
 @allure.feature("Tasks API")
-@allure.story("Create a new task")
+@allure.title("Create a new task")
 def test_create_task_api_success(client):
     """Интеграционный тест: успешное создание задачи через HTTP POST"""
     with allure.step("Fill payload"):
@@ -27,7 +27,7 @@ def test_create_task_api_success(client):
         assert "date_created" in data
         assert "date_updated" in data
 
-@allure.story("Get a tasks list")
+@allure.title("Get a tasks list")
 def test_get_tasks_api(client):
     """Интеграционный тест: получение списка задач"""
     # Сначала создадим одну задачу, чтобы список не был пустым

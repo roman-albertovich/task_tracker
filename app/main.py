@@ -1,10 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 import os
 import uuid
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import TaskDB, TaskCreate, TaskResponse, TaskStatus, TaskUpdate
+from typing import Optional
+
 
 app = FastAPI(title="Task Manager API")
 
@@ -26,10 +28,22 @@ def create_task(task_date: TaskCreate, db: Session = Depends(get_db)):
     return new_task
 
 @app.get("/tasks", response_model=list[TaskResponse])
-def get_tasks(db: Session = Depends(get_db)):
+def get_tasks(
+        status: Optional[str] = Query(None, description="Фильтр по статусу (NEW, IN_PROGRESS, DONE, CANCELLED)"),
+        name: Optional[str] = Query(None, description="Поиск по имени (подстрока, без учёта регистра)"),
+        author: Optional[str] = Query(None, description="Поиск по автору (подстрока, без учёта регистра)"),
+        db: Session = Depends(get_db)
+):
     """Получение всех задач из базы данных"""
-    tasks = db.query(TaskDB).all()
-    return tasks
+    tasks = db.query(TaskDB)
+    if status:
+        tasks = tasks.filter(TaskDB.status == status)
+    if name:
+        tasks = tasks.filter(TaskDB.name.ilike(f"%{name}%"))
+    if author:
+        tasks = tasks.filter(TaskDB.author.ilike(f"%{author}%"))
+
+    return tasks.all()
 
 @app.get("/tasks/{task_id}", response_model=TaskResponse)
 def get_task_by_id(task_id: uuid.UUID, db: Session = Depends(get_db)):

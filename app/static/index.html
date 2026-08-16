@@ -501,7 +501,18 @@
             <h1>☀️ Менеджер задач</h1>
             <span class="task-count" id="taskCount">0 задач</span>
         </div>
-
+        <!-- Панель фильтрации -->
+        <div class="filters-panel" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="filterName" placeholder="Поиск по названию" oninput="applyFilters()">
+            <input type="text" id="filterAuthor" placeholder="Поиск по автору" oninput="applyFilters()">
+            <select id="filterStatus" onchange="applyFilters()">
+                <option value="">Все статусы</option>
+                <option value="NEW">NEW</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="DONE">DONE</option>
+                <option value="CANCELLED">CANCELLED</option>
+            </select>
+        </div>
         <!-- Форма -->
         <div class="task-form" id="taskForm">
             <div class="form-row">
@@ -566,6 +577,21 @@
         let editTaskId = null;
         let deleteTaskId = null;
 
+        // ===== Фильтрация задач =====
+        async function applyFilters() {
+            const name = document.getElementById('filterName').value;
+            const author = document.getElementById('filterAuthor').value;
+            const status = document.getElementById('filterStatus').value;
+
+            const params = new URLSearchParams();
+            if (name) params.append('name', name);
+            if (author) params.append('author', author);
+            if (status) params.append('status', status);
+
+            const response = await fetch(`${API_URL}?${params.toString()}`);
+            const tasks = await response.json();
+            renderTasks(tasks); // твоя функция отрисовки карточек
+        }
         // ===== Загрузка задач =====
         async function loadTasks() {
             try {
